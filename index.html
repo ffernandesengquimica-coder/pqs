@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Formulário de Contato</title>
+  <style>
+    :root { --bg:#0f172a; --card:#111827; --muted:#9ca3af; --accent:#6366f1; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;background:linear-gradient(135deg,#0f172a,#111827);color:#e5e7eb;min-height:100vh;display:grid;place-items:center;padding:32px}
+    .card{width:100%;max-width:640px;background:rgba(17,24,39,.9);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.06);border-radius:20px;padding:28px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    h1{font-weight:700;font-size:clamp(22px,3vw,28px);margin:0 0 8px}
+    p.subtitle{margin:0 0 22px;color:var(--muted)}
+    label{display:block;margin:14px 0 6px;color:#cbd5e1;font-weight:600}
+    input, textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid #374151;background:#111827;color:#e5e7eb;outline:none}
+    input:focus, textarea:focus{border-color:var(--accent)}
+    textarea{min-height:120px;resize:vertical}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .btn{margin-top:16px;width:100%;padding:12px 16px;border:none;border-radius:12px;background:var(--accent);color:white;font-weight:700;cursor:pointer}
+    .btn:hover{filter:brightness(1.08)}
+    .note{font-size:12px;color:#94a3b8;margin-top:8px}
+    footer{margin-top:18px;text-align:center;font-size:12px;color:#94a3b8}
+    a{color:#a5b4fc}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Fale com a gente</h1>
+    <p class="subtitle">Este formulário é hospedado no GitHub Pages. As respostas são enviadas pela Formspree.</p>
+
+    <!-- Substitua o action pelo seu endpoint da Formspree -->
+    <form action="https://formspree.io/f/SEU_ID_AQUI" method="POST">
+      <div class="row">
+        <div>
+          <label for="nome">Nome</label>
+          <input type="text" id="nome" name="nome" required placeholder="Seu nome" />
+        </div>
+        <div>
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required placeholder="voce@exemplo.com" />
+        </div>
+      </div>
+
+      <label for="assunto">Assunto</label>
+      <input type="text" id="assunto" name="assunto" placeholder="Sobre o que é sua mensagem?" />
+
+      <label for="mensagem">Mensagem</label>
+      <textarea id="mensagem" name="mensagem" required placeholder="Escreva aqui..."></textarea>
+
+      <!-- Redirect opcional após envio -->
+      <input type="hidden" name="_redirect" value="thanks.html" />
+
+      <!-- Campos extras da Formspree (opcionais) -->
+      <input type="hidden" name="_subject" value="Nova mensagem do site" />
+      <input type="text" name="_gotcha" style="display:none" />
+
+      <button class="btn" type="submit">Enviar</button>
+      <div class="note">Dica: troque <code>SEU_ID_AQUI</code> pelo ID do seu formulário na Formspree.</div>
+    </form>
+
+    <footer>Hospedado com <a href="https://pages.github.com/" target="_blank" rel="noopener">GitHub Pages</a>.</footer>
+  </main>
+</body>
+</html>
