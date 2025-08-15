@@ -129,4 +129,89 @@
         <label for="pontosPositivos">O que funcionou bem?</label>
         <textarea id="pontosPositivos" name="pontosPositivos" placeholder="Conte o que mais gostou…"></textarea>
 
-        <label for="oQueMelhorar">O que podemos melhorar?<
+        <label for="oQueMelhorar">O que podemos melhorar?</label>
+        <textarea id="oQueMelhorar" name="oQueMelhorar" placeholder="Sugestões objetivas ajudam muito…"></textarea>
+
+        <label for="observacoes">Observações adicionais</label>
+        <textarea id="observacoes" name="observacoes" placeholder="Informações complementares (opcional)…"></textarea>
+
+        <label class="note"><input type="checkbox" id="consent" required /> Autorizo o uso dos dados desta pesquisa para fins de melhoria de serviços.</label>
+        <div class="note">Ao enviar, os dados são enviados em JSON para o seu webhook.</div>
+      </fieldset>
+
+      <button id="btnSubmit" class="btn" type="submit">Enviar feedback</button>
+      <div id="ok" class="alert ok">Obrigado! Sua resposta foi enviada com sucesso. ✅</div>
+      <div id="err" class="alert err">Não foi possível enviar agora. Tente novamente mais tarde. ❌</div>
+    </form>
+
+    <footer>Hospedado em GitHub Pages • <a href="./">voltar ao início</a></footer>
+  </main>
+
+  <script>
+    // Utilitário seguro para ID
+    function genId(){
+      if (crypto && crypto.randomUUID) return crypto.randomUUID();
+      return 'id-' + Math.random().toString(36).slice(2) + Date.now();
+    }
+
+    const form = document.getElementById('survey');
+    const btn  = document.getElementById('btnSubmit');
+    const okEl = document.getElementById('ok');
+    const errEl= document.getElementById('err');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      okEl.style.display = 'none';
+      errEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Enviando…';
+
+      // Coleta dos campos
+      const data = new FormData(form);
+      const payload = {
+        meta: {
+          id: genId(),
+          timestamp: new Date().toISOString(),
+          pageUrl: location.href,
+          userAgent: navigator.userAgent
+        },
+        resposta: {
+          nome: data.get('nome') || null,
+          email: data.get('email') || null,
+          projeto: data.get('projeto'),
+          dataRef: data.get('dataRef') || null,
+          nps: data.get('nps') !== null ? Number(data.get('nps')) : null,
+          satisfacao: Number(data.get('satisfacao')),
+          qualidade: Number(data.get('qualidade')),
+          tempoResposta: Number(data.get('tempoResposta')),
+          recomendaria: data.get('recomendaria'),
+          pontosPositivos: data.get('pontosPositivos') || null,
+          oQueMelhorar: data.get('oQueMelhorar') || null,
+          observacoes: data.get('observacoes') || null,
+          consent: document.getElementById('consent').checked
+        }
+      };
+
+      try {
+        const res = await fetch('https://radixie.radixeng.com.br/webhook/pqs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+
+        // Sucesso
+        okEl.style.display = 'block';
+        form.reset();
+      } catch (err) {
+        console.error('Falha ao enviar:', err);
+        errEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Enviar feedback';
+      }
+    });
+  </script>
+</body>
+</html>
