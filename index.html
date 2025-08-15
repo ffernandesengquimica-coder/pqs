@@ -43,12 +43,10 @@
         <div class="grid-2">
           <div>
             <label for="nome">Nome <span class="muted">(preenchido automaticamente)</span></label>
-            <!-- bloqueado para edição manual -->
             <input id="nome" name="nome" type="text" placeholder="(automático)" readonly />
           </div>
           <div>
             <label for="email">Email <span class="muted">(preenchido automaticamente)</span></label>
-            <!-- bloqueado para edição manual -->
             <input id="email" name="email" type="email" placeholder="(automático)" readonly />
           </div>
         </div>
@@ -154,6 +152,7 @@
       if (crypto && crypto.randomUUID) return crypto.randomUUID();
       return 'id-' + Math.random().toString(36).slice(2) + Date.now();
     }
+
     const form = document.getElementById('survey');
     const btn  = document.getElementById('btnSubmit');
     const okEl = document.getElementById('ok');
@@ -191,15 +190,28 @@
         }
       };
 
+      // Timeout de segurança para evitar travar a UI
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 15000);
+
       try {
         const res = await fetch('https://radixie.radixeng.com.br/webhook/recebepqs', {
           method: 'POST',
+          mode: 'cors',
+          credentials: 'omit',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          signal: ctrl.signal
         });
+        clearTimeout(t);
         if (!res.ok) throw new Error('HTTP ' + res.status);
+
         okEl.style.display = 'block';
         form.reset();
+        // Mantém nome/email pré-preenchidos (se estavam na URL)
+        const p = new URLSearchParams(location.search);
+        if (p.get('nome'))  document.getElementById('nome').value  = p.get('nome');
+        if (p.get('email')) document.getElementById('email').value = p.get('email');
       } catch (err) {
         console.error('Falha ao enviar:', err);
         errEl.style.display = 'block';
@@ -219,7 +231,6 @@
       }
       ready(() => {
         const params = new URLSearchParams(window.location.search);
-
         const map = {
           nome: 'nome',
           email: 'email',
@@ -243,7 +254,6 @@
           return null;
         }
 
-        // nome/email já estão readonly por padrão e permanecerão bloqueados
         for (const [qName, field] of Object.entries(map)) {
           if (!params.has(qName)) continue;
           const val = params.get(qName);
