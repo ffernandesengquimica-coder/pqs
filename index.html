@@ -30,6 +30,74 @@
     a{color:#a5b4fc}
   </style>
 </head>
+  <script>
+  // --- PREFILL VIA QUERYSTRING ---
+  (function prefillFromQuery(){
+    const params = new URLSearchParams(window.location.search);
+
+    // Mapeie os nomes dos parâmetros -> ids/names dos campos do seu form
+    const map = {
+      nome: 'nome',
+      email: 'email',
+      projeto: 'projeto',
+      dataRef: 'dataRef',
+      nps: 'nps',
+      satisfacao: 'satisfacao',
+      qualidade: 'qualidade',
+      tempoResposta: 'tempoResposta',
+      recomendaria: 'recomendaria',
+      pontosPositivos: 'pontosPositivos',
+      oQueMelhorar: 'oQueMelhorar',
+      observacoes: 'observacoes'
+    };
+
+    // helper: seleciona radio pelo value
+    function setRadio(name, value){
+      const radios = document.querySelectorAll(`input[type="radio"][name="${name}"]`);
+      for (const r of radios) {
+        if (String(r.value) === String(value)) {
+          r.checked = true;
+          return;
+        }
+      }
+    }
+
+    // helper: trava o campo se veio de prefill
+    function lock(el){
+      if (!el) return;
+      const tag = el.tagName.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') {
+        el.readOnly = true;          // inputs/textarea
+        if (tag === 'select') el.disabled = true; // select não tem readOnly
+        el.dataset.prefilled = "1";  // marca visual se quiser estilizar
+      }
+    }
+
+    for (const [qName, field] of Object.entries(map)) {
+      if (!params.has(qName)) continue;
+      const val = params.get(qName);
+
+      // radios
+      if (qName === 'nps' || qName === 'recomendaria') {
+        setRadio(field, val);
+        continue;
+      }
+
+      // selects
+      const select = document.getElementById(field);
+      if (select && select.tagName === 'SELECT') {
+        const opt = [...select.options].find(o => String(o.value) === String(val));
+        if (opt) { select.value = opt.value; lock(select); }
+        continue;
+      }
+
+      // inputs/textarea
+      const input = document.getElementById(field) || document.querySelector(`[name="${field}"]`);
+      if (input) { input.value = val; lock(input); }
+    }
+  })();
+</script>
+
 <body>
   <main class="wrap">
     <h1>Pesquisa de Satisfação</h1>
