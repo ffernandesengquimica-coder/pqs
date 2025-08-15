@@ -30,74 +30,6 @@
     a{color:#a5b4fc}
   </style>
 </head>
-  <script>
-  // --- PREFILL VIA QUERYSTRING ---
-  (function prefillFromQuery(){
-    const params = new URLSearchParams(window.location.search);
-
-    // Mapeie os nomes dos parâmetros -> ids/names dos campos do seu form
-    const map = {
-      nome: 'nome',
-      email: 'email',
-      projeto: 'projeto',
-      dataRef: 'dataRef',
-      nps: 'nps',
-      satisfacao: 'satisfacao',
-      qualidade: 'qualidade',
-      tempoResposta: 'tempoResposta',
-      recomendaria: 'recomendaria',
-      pontosPositivos: 'pontosPositivos',
-      oQueMelhorar: 'oQueMelhorar',
-      observacoes: 'observacoes'
-    };
-
-    // helper: seleciona radio pelo value
-    function setRadio(name, value){
-      const radios = document.querySelectorAll(`input[type="radio"][name="${name}"]`);
-      for (const r of radios) {
-        if (String(r.value) === String(value)) {
-          r.checked = true;
-          return;
-        }
-      }
-    }
-
-    // helper: trava o campo se veio de prefill
-    function lock(el){
-      if (!el) return;
-      const tag = el.tagName.toLowerCase();
-      if (tag === 'input' || tag === 'textarea' || tag === 'select') {
-        el.readOnly = true;          // inputs/textarea
-        if (tag === 'select') el.disabled = true; // select não tem readOnly
-        el.dataset.prefilled = "1";  // marca visual se quiser estilizar
-      }
-    }
-
-    for (const [qName, field] of Object.entries(map)) {
-      if (!params.has(qName)) continue;
-      const val = params.get(qName);
-
-      // radios
-      if (qName === 'nps' || qName === 'recomendaria') {
-        setRadio(field, val);
-        continue;
-      }
-
-      // selects
-      const select = document.getElementById(field);
-      if (select && select.tagName === 'SELECT') {
-        const opt = [...select.options].find(o => String(o.value) === String(val));
-        if (opt) { select.value = opt.value; lock(select); }
-        continue;
-      }
-
-      // inputs/textarea
-      const input = document.getElementById(field) || document.querySelector(`[name="${field}"]`);
-      if (input) { input.value = val; lock(input); }
-    }
-  })();
-</script>
-
 <body>
   <main class="wrap">
     <h1>Pesquisa de Satisfação</h1>
@@ -130,12 +62,9 @@
 
       <fieldset>
         <legend>Métricas</legend>
-
         <label>Quão provável é recomendar nossos serviços? (NPS)</label>
         <div class="radios-inline" role="radiogroup" aria-label="NPS">
-          <!-- 0 a 10 -->
           <div class="radios">
-            <!-- gera de 0 a 10 manualmente para acessibilidade -->
             <label><input type="radio" name="nps" value="0" required />0</label>
             <label><input type="radio" name="nps" value="1" />1</label>
             <label><input type="radio" name="nps" value="2" />2</label>
@@ -215,8 +144,8 @@
     <footer>Hospedado em GitHub Pages • <a href="./">voltar ao início</a></footer>
   </main>
 
+  <!-- Script de envio -->
   <script>
-    // Utilitário seguro para ID
     function genId(){
       if (crypto && crypto.randomUUID) return crypto.randomUUID();
       return 'id-' + Math.random().toString(36).slice(2) + Date.now();
@@ -234,7 +163,6 @@
       btn.disabled = true;
       btn.textContent = 'Enviando…';
 
-      // Coleta dos campos
       const data = new FormData(form);
       const payload = {
         meta: {
@@ -266,10 +194,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-
         if (!res.ok) throw new Error('HTTP ' + res.status);
-
-        // Sucesso
         okEl.style.display = 'block';
         form.reset();
       } catch (err) {
@@ -280,6 +205,65 @@
         btn.textContent = 'Enviar feedback';
       }
     });
+  </script>
+
+  <!-- Script de prefill -->
+  <script>
+    (function prefillFromQuery(){
+      function ready(fn){
+        if (document.readyState !== 'loading') fn();
+        else document.addEventListener('DOMContentLoaded', fn);
+      }
+      ready(() => {
+        const params = new URLSearchParams(window.location.search);
+        const map = {
+          nome: 'nome',
+          email: 'email',
+          projeto: 'projeto',
+          dataRef: 'dataRef',
+          nps: 'nps',
+          satisfacao: 'satisfacao',
+          qualidade: 'qualidade',
+          tempoResposta: 'tempoResposta',
+          recomendaria: 'recomendaria',
+          pontosPositivos: 'pontosPositivos',
+          oQueMelhorar: 'oQueMelhorar',
+          observacoes: 'observacoes'
+        };
+        function setRadio(name, value){
+          const radios = document.querySelectorAll(`input[type="radio"][name="${name}"]`);
+          for (const r of radios) {
+            if (String(r.value) === String(value)) { r.checked = true; return r; }
+          }
+          return null;
+        }
+        function lock(el){
+          if (!el) return;
+          const tag = el.tagName.toLowerCase();
+          if (tag === 'select') el.disabled = true;
+          else el.readOnly = true;
+          el.dataset.prefilled = "1";
+        }
+        for (const [qName, field] of Object.entries(map)) {
+          if (!params.has(qName)) continue;
+          const val = params.get(qName);
+          if (qName === 'nps' || qName === 'recomendaria') {
+            const r = setRadio(field, val);
+            if (r) lock(r);
+            continue;
+          }
+          const select = document.getElementById(field);
+          if (select && select.tagName === 'SELECT') {
+            const opt = [...select.options].find(o => String(o.value) === String(val));
+            if (opt) { select.value = opt.value; lock(select); }
+            continue;
+          }
+          const input = document.getElementById(field) || document.querySelector(`[name="${field}"]`);
+          if (input) { input.value = val; lock(input); }
+        }
+        console.log('Prefill params →', Object.fromEntries(params.entries()));
+      });
+    })();
   </script>
 </body>
 </html>
